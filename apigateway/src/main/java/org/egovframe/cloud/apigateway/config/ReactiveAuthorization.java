@@ -2,6 +2,13 @@ package org.egovframe.cloud.apigateway.config;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -87,11 +94,10 @@ public class ReactiveAuthorization implements ReactiveAuthorizationManager<Autho
         ) {
             try {
                 authorizationHeader = authorizations.get(0);
-                String jwt = authorizationHeader.replace("Bearer", "");
-                String subject = Jwts.parser().setSigningKey(TOKEN_PUBLIC)
-                    .parseClaimsJws(jwt)
-                    .getBody()
-                    .getSubject();
+                String jwt = authorizationHeader.replace("Bearer ", "");
+                String subject = Jwts.parser()
+                                .verifyWith(loadPublicKey(TOKEN_PUBLIC))
+                                .build().parseSignedClaims(jwt).getPayload().getSubject();
 
                 // refresh token 요청 시 토큰 검증만 하고 인가 처리 한다.
                 if (REFRESH_TOKEN_URI.equals(requestPath + "")) {
@@ -130,6 +136,16 @@ public class ReactiveAuthorization implements ReactiveAuthorizationManager<Autho
         }
 
         return Mono.just(new AuthorizationDecision(granted));
+    }
+
+    private PublicKey loadPublicKey(String tokenPublic) {
+        try {
+            byte[] keyBytes = Base64.getDecoder().decode(tokenPublic);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
+            return KeyFactory.getInstance("RSA").generatePublic(keySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new IllegalStateException("Invalid public key", e);
+        }
     }
 
 }

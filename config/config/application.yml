@@ -23,17 +23,17 @@ messages:
   directory: ${file.directory}/messages
 
 apigateway:
-  host: http://${apigateway.hostname:localhost}:${server.port}
+  host: http://localhost:8000
 
 # rabbitmq server
-spring:
-  rabbitmq:
-    host: ${rabbitmq.hostname:localhost}
-    port: 5672
-    username: guest
-    password: guest
-  zipkin:
-    base-url: http://${zipkin.hostname:localhost}:${zipkin.port:9411}
+#spring:
+#  rabbitmq:
+#    host: ${rabbitmq.hostname:localhost}
+#    port: 5672
+#    username: guest
+#    password: guest
+#  zipkin:
+#    base-url: http://${zipkin.hostname:localhost}:${zipkin.port:9411}
 
 egov:
   message: hello
