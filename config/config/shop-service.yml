@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    # Postgres 서버 타임존을 서울(KST)로 맞추기 위해 옵션 추가
+    url: jdbc:postgresql://192.168.219.111:5432/test?currentSchema=public&options=-c%20TimeZone=Asia/Seoul
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: postgres
+  jackson:
+    time-zone: Asia/Seoul
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+  batch:
+    jdbc:
+      initialize-schema: never
+  task:
+    scheduling:
+      cron:
+        settlement: "0 0 0 * * *"
+
+api:
+  v1: /api/v1
+settlement:
+  async:
+    enabled: false
+    pool-size: 5
+
+payment:
+  toss:
+    secret-key: test_sk_LlDJaYngroX04konl9xn8ezGdRpX

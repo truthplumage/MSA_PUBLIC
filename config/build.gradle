@@ -1,0 +1,40 @@
+plugins {
+    id 'io.spring.dependency-management' version '1.1.0'
+    id 'java'
+}
+
+group = 'org.egovframe.cloud'
+version = '1.0.0'
+sourceCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+    maven { url "https://maven.egovframe.go.kr/maven/" } // egovframe maven 원격 저장소
+}
+
+ext {
+    set('egovframeBootVersion', '4.3.0')
+    set('springCloudVersion', '2021.0.9')
+    set('log4j2.version', '2.23.1') // log4j 보안 패치
+}
+
+dependencies {
+    implementation 'org.springframework.cloud:spring-cloud-config-server'
+    implementation 'org.springframework.cloud:spring-cloud-config-monitor'    // webhook
+    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
+//    implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp'  // bus
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'    // bus
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'        // logstash logback
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.egovframe.boot:org.egovframe.boot.starter.parent:${egovframeBootVersion}" // egovframe Boot Parent 설정
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+test {
+    useJUnitPlatform()
+}

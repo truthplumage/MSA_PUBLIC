@@ -1,0 +1,88 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: apigateway
+  cloud:
+    gateway:
+      routes:
+#        - id: user-service
+#          uri: lb://USER-SERVICE
+#          predicates:
+#            - Path=/user-service/**
+#          filters:
+#            - RemoveRequestHeader=Cookie
+#            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+#        - id: portal-service
+#          uri: lb://PORTAL-SERVICE
+#          predicates:
+#            - Path=/portal-service/**
+#          filters:
+#            - RewritePath=/portal-service/(?<segment>.*), /$\{segment}
+        - id: shop-service
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/shop-service/**
+          filters:
+            - RewritePath=/shop-service/(?<segment>.*), /$\{segment}
+        - id: member-service
+          uri: lb://MEMBER-SERVICE
+          predicates:
+            - Path=/member-service/**
+          filters:
+            - RewritePath=/member-service/(?<segment>.*), /$\{segment}
+#        - id: board-service
+#          uri: lb://BOARD-SERVICE
+#          predicates:
+#            - Path=/board-service/**
+#          filters:
+#            - RewritePath=/board-service/(?<segment>.*), /$\{segment}
+#        - id: reserve-item-service
+#          uri: lb://RESERVE-ITEM-SERVICE
+#          predicates:
+#            - Path=/reserve-item-service/**
+#          filters:
+#            - RewritePath=/reserve-item-service/(?<segment>.*), /$\{segment}
+#        - id: reserve-check-service
+#          uri: lb://RESERVE-CHECK-SERVICE
+#          predicates:
+#            - Path=/reserve-check-service/**
+#          filters:
+#            - RewritePath=/reserve-check-service/(?<segment>.*), /$\{segment}
+#        - id: reserve-request-service
+#          uri: lb://RESERVE-REQUEST-SERVICE
+#          predicates:
+#            - Path=/reserve-request-service/**
+#          filters:
+#            - RewritePath=/reserve-request-service/(?<segment>.*), /$\{segment}
+        - id: openapi
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/v3/api-docs/**
+          filters:
+            - RewritePath=/v3/api-docs/(?<segment>.*), /$\{segment}/v3/api-docs
+      default-filters:
+        - name: GlobalFilter
+          args:
+            preLogger: true
+            postLogger: true
+      discovery:
+        locator:
+          enabled: true
+
+# config server actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, info
+
+info:
+  app:
+    name: Spring Cloud Gateway
+    description: API 라우팅 및 보안, 모니터링/메트릭 등의 기능을 간단하고 효과적인 방법으로 제공
+  swagger-ui: http://localhost:8000/webjars/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config
+
+messages:
+  directory: ${user.dir}/msa-attach-volume/messages
