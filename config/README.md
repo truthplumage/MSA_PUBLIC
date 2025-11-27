@@ -6,3 +6,6 @@
 
 ## 참고
 각 서비스에서 이 설정을 참조합니다.
+
+## Kubernetes 배포
+- `k8s/config.yaml`을 `kubectl apply -f k8s/config.yaml` 명령으로 적용하면 Config Server가 `config-deployment`/`config-service`로 생성됩니다.

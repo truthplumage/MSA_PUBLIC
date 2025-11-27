@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-service
+  labels:
+    app: discovery
+spec:
+  type: LoadBalancer
+  selector:
+    app: discovery
+  ports:
+    - name: http
+      port: 8761
+      targetPort: 8761
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-deployment
+  labels:
+    app: discovery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discovery
+  template:
+    metadata:
+      labels:
+        app: discovery
+    spec:
+      containers:
+        - name: discovery
+          image: discovery:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8761
+          env:
+            - name: TZ
+              value: Asia/Seoul
+            - name: app_name
+              value: egov-discovery
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8761
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 36
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8761
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3

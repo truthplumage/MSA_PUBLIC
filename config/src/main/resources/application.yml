@@ -12,7 +12,8 @@ spring:
     config:
       server:
         native:
-          search-locations: file:/Users/parkjinwoo/source/study/MSA/config/config
+#          search-locations: file:/Users/parkjinwoo/source/study/MSA/config/config
+          search-locations: file:/config
 #          search-locations: ${search.location:file:///${user.home}/workspace.edu/egovframe-msa-edu/config} # Windows
 #           search-locations: file://${user.home}/workspace.edu/egovframe-msa-edu/config # MacOS
 #  rabbitmq:
@@ -22,8 +23,8 @@ spring:
 #    password: guest
 
 # config server actuator
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: busrefresh
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
