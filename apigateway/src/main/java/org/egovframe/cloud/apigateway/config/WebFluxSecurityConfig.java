@@ -38,11 +38,11 @@ public class WebFluxSecurityConfig {
             "/?*-service/actuator/?*", "/actuator/?*",
             "/actuator/gateway/**",
             "/shop-service/payments/**",
-//            "/shop-service/api/v1/**",
+            "/shop-service/api/v1/search/**",
             "/shop-service/toss-payment.html",
             "/v3/api-docs/**", "/?*-service/v3/api-docs", "/swagger*/**", "/webjars/**"
     };
-    private final static String USER_JOIN_ANTPATTERNS = "/user-service/api/v1/users";
+    private final static String USER_JOIN_ANTPATTERNS = "/member-service/api/v1/members";
 
     /**
      * WebFlux 스프링 시큐리티 설정
