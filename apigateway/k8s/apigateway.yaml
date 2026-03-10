@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: apigateway
+  namespace: msa
   labels:
     app.kubernetes.io/name: apigateway
 spec:
@@ -12,11 +13,12 @@ spec:
     - name: http
       port: 8000
       targetPort: 8000
------
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: apigateway
+  namespace: msa
   labels:
     app.kubernetes.io/name: apigateway
 spec:
@@ -35,15 +37,15 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: k8s
+              value: default
+            - name: SPRING_APPLICATION_NAME
+              value: apigateway
+            - name: EUREKA_INSTANCE_HOSTNAME
+              value: discovery
             - name: SPRING_CLOUD_CONFIG_URI
-              value: http://config-service.default.svc.cluster.local:8888
-          command: ["java"]
-          args:
-            - "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE}"
-            - "-Dlogstash.url=${LOGSTASH_URL}"
-            - "-jar"
-            - "/usr/app/apigateway.jar"
+              value: http://config-service:8888
+            - name: SERVER_PORT
+              value: "8000"
           ports:
             - containerPort: 8000
           readinessProbe:

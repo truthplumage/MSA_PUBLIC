@@ -26,12 +26,12 @@ spring:
 #            - Path=/shop-service/**
 #          filters:
 #            - RewritePath=/shop-service/(?<segment>.*), /$\{segment}
-#        - id: member-service
-#          uri: lb://MEMBER-SERVICE
-#          predicates:
-#            - Path=/member-service/**
-#          filters:
-#            - RewritePath=/member-service/(?<segment>.*), /$\{segment}
+        - id: member-service
+          uri: lb://MEMBER-SERVICE
+          predicates:
+            - Path=/member-service/**
+          filters:
+            - RewritePath=/member-service/(?<segment>.*), /$\{segment}
         - id: backend5-service
           uri: lb://BACKEND5-SERVICE
           predicates:

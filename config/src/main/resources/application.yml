@@ -13,7 +13,7 @@ spring:
       server:
         native:
 #          search-locations: file:/Users/parkjinwoo/source/study/MSA/config/config
-          search-locations: file:/config
+          search-locations: file:${user.dir}/config,file:${user.dir}/config/config
 #          search-locations: ${search.location:file:///${user.home}/workspace.edu/egovframe-msa-edu/config} # Windows
 #           search-locations: file://${user.home}/workspace.edu/egovframe-msa-edu/config # MacOS
 #  rabbitmq:
