@@ -59,7 +59,8 @@ public class ReactiveAuthorization implements ReactiveAuthorizationManager<Autho
     private String TOKEN_PUBLIC;
 
     // org.egovframe.cloud.common.config.GlobalConstant 값도 같이 변경해주어야 한다.
-    public static final String AUTHORIZATION_URI = "/member-service" + "/api/v1/authorizations/check";
+//    public static final String AUTHORIZATION_URI = "/member-service" + "/api/v1/authorizations/check";
+    public static final String AUTHORIZATION_URI = "/backend5-service" + "/api/authorizations/check";
     public static final String REFRESH_TOKEN_URI = "/user-service" + "/api/v1/users/token/refresh";
 
     /**
@@ -76,7 +77,7 @@ public class ReactiveAuthorization implements ReactiveAuthorizationManager<Autho
         ServerHttpRequest request = context.getExchange().getRequest();
         RequestPath requestPath = request.getPath();
         HttpMethod httpMethod = request.getMethod();
-
+        //인가 체크하는 api 주소.
         String baseUrl =
             APIGATEWAY_HOST + AUTHORIZATION_URI + "?httpMethod=" + httpMethod + "&requestPath="
                 + requestPath;
@@ -132,9 +133,9 @@ public class ReactiveAuthorization implements ReactiveAuthorizationManager<Autho
             log.info("Security AuthorizationDecision granted={}", granted);
         } catch (Exception e) {
             log.error("인가 서버에 요청 중 오류 : {}", e.getMessage());
+//            return Mono.just(new AuthorizationDecision(true));
             throw new AuthorizationServiceException("인가 요청시 오류 발생");
         }
-
         return Mono.just(new AuthorizationDecision(granted));
     }
 
