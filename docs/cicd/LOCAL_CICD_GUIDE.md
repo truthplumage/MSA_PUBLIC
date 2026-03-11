@@ -39,17 +39,7 @@
 
 ## 3. 로컬에서 많이 쓰는 방식
 
-### 3-1. 스크립트 직접 실행
-
-가장 단순한 방식입니다.
-
-예:
-
-```bash
-./scripts/all_in_one.sh
-```
-
-### 3-2. Jenkins를 내 PC에 설치
+### 3-1. Jenkins를 내 PC에 설치
 
 구조:
 
@@ -58,7 +48,7 @@
 3. Docker 이미지 생성
 4. minikube 반영
 
-### 3-3. GitHub Actions self-hosted runner
+### 3-2. GitHub Actions self-hosted runner
 
 구조:
 
@@ -77,8 +67,6 @@
 
 추가된 자동화 파일:
 
-- [local-cicd.sh](/Users/parkjinwoo/source/study/grepp_BE2/MSA/scripts/local/local-cicd.sh)
-- [local-cicd.yml](/Users/parkjinwoo/source/study/grepp_BE2/.github/workflows/local-cicd.yml)
 - [SELF_HOSTED_RUNNER_GUIDE.md](/Users/parkjinwoo/source/study/grepp_BE2/MSA/docs/cicd/SELF_HOSTED_RUNNER_GUIDE.md)
 
 즉 먼저 아래 스크립트가 기준이 됩니다.
@@ -129,17 +117,7 @@
 - `run_k8s.sh`
 - `check_k8s.sh`
 
-## 8. 한 번에 실행하는 방법
-
-모듈별로 한 번에 처리하려면:
-
-```bash
-IMAGE_REGISTRY=local IMAGE_TAG=dev LOAD_TO_MINIKUBE=true ./scripts/all_in_one.sh
-```
-
-다른 모듈도 같은 방식입니다.
-
-## 9. 로컬 자동화에 필요한 것
+## 8. 로컬 자동화에 필요한 것
 
 보통 아래만 있으면 됩니다.
 
@@ -149,7 +127,7 @@ IMAGE_REGISTRY=local IMAGE_TAG=dev LOAD_TO_MINIKUBE=true ./scripts/all_in_one.sh
 - JDK
 - Git
 
-## 10. 로컬에서 자주 쓰는 자동화 도구
+## 9. 로컬에서 자주 쓰는 자동화 도구
 
 ### 1) Jenkins
 
