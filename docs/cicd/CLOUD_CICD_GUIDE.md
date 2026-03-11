@@ -56,6 +56,7 @@ GitHub Actions
 실제 workflow 파일:
 
 - [image-registry-cicd.yml](/Users/parkjinwoo/source/study/grepp_BE2/MSA/.github/workflows/image-registry-cicd.yml)
+- [GITHUB_GHCR_SETUP_GUIDE.md](/Users/parkjinwoo/source/study/grepp_BE2/MSA/docs/cicd/GITHUB_GHCR_SETUP_GUIDE.md)
 
 이 workflow가 하는 일:
 
