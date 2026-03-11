@@ -1,235 +1,173 @@
-# 클라우드 서버 CI/CD 정리
+# 클라우드 이미지 CI/CD 정리
 
-이 문서는 외부 클라우드 서버에 이 프로젝트를 자동 배포할 때 어떤 구성이 필요한지 정리한 문서입니다.
+이 문서는 외부 클라우드 서버가 아직 없어도
+GitHub Actions로 Docker 이미지를 자동 생성해서 레지스트리까지 올리는 흐름을 정리한 문서입니다.
 
 대상:
 
 - `config-service`
 - `discovery`
 - `apigateway`
-- `member-service`
+
+`member-service`는 현재 별도 Git 저장소라서 이 문서의 workflow에는 포함하지 않습니다.
 
 ## 1. 전체 흐름
 
-가장 많이 쓰는 흐름은 아래와 같습니다.
+지금 기준 흐름은 아래와 같습니다.
 
 1. GitHub에 코드 푸시
 2. GitHub Actions 실행
-3. 테스트와 빌드 수행
+3. 각 모듈 `jar` 빌드
 4. Docker 이미지 생성
-5. 이미지 레지스트리에 push
-6. 클라우드 서버 또는 Kubernetes에 배포
+5. GHCR로 push
 
 한 줄로 보면 아래 구조입니다.
 
 ```text
-개발자 -> GitHub push -> GitHub Actions -> Docker Registry -> Cloud Server(K8s)
+개발자 -> GitHub push -> GitHub Actions -> Docker Registry
 ```
 
 ## 2. 준비할 것
 
-필요한 것은 4가지입니다.
+필요한 것은 2가지입니다.
 
 - Git 저장소
 - Docker 이미지 저장소
-  - 예: Docker Hub, GHCR
-- 클라우드 서버
-  - 예: AWS EC2, Naver Cloud Server, GCP VM
-- 배포 대상 Kubernetes 클러스터 또는 서버
+  - 여기서는 GHCR 사용
 
-## 3. 어떤 방식으로 배포하나
+## 3. 가장 단순한 권장 구조
 
-보통 아래 두 방식 중 하나를 고릅니다.
-
-### 3-1. 서버에 직접 배포
-
-구조:
-
-1. GitHub Actions가 Docker 이미지를 push
-2. 클라우드 서버에서 `docker pull`
-3. 서버에서 컨테이너 재시작
-
-이 방식은 단순합니다.
-
-### 3-2. Kubernetes로 배포
-
-구조:
-
-1. GitHub Actions가 Docker 이미지를 push
-2. GitHub Actions가 `kubectl apply` 또는 `kubectl set image`
-3. Kubernetes가 새 Pod를 올림
-
-지금 프로젝트는 이 방식이 더 잘 맞습니다.
-
-이유:
-
-- 이미 Kubernetes YAML이 있음
-- 서비스가 여러 개임
-- `config`, `discovery`, `apigateway`, `member-service`를 나눠 관리하기 쉬움
-
-## 4. 가장 단순한 권장 구조
-
-이 프로젝트에서는 아래 구조가 가장 무난합니다.
+이 프로젝트에서는 아래 구조가 가장 단순합니다.
 
 1. GitHub Actions 사용
-2. 이미지 저장소는 GHCR 또는 Docker Hub 사용
-3. 배포 대상은 Kubernetes 사용
-4. Kubernetes에는 `msa` 네임스페이스 사용
+2. 이미지 저장소는 GHCR 사용
+3. 서버 배포는 나중에 추가
 
 즉:
 
 ```text
 GitHub Actions
 -> Docker 이미지 빌드
--> GHCR/Docker Hub push
--> kubectl로 K8s 반영
+-> GHCR push
 ```
 
-## 5. 저장소에 넣어둘 것
+## 4. 지금 저장소에 들어 있는 workflow
 
-Git에 넣는 것:
+실제 workflow 파일:
 
-- Dockerfile
-- Kubernetes YAML
-- 배포 스크립트
-- GitHub Actions workflow 파일
+- [image-registry-cicd.yml](/Users/parkjinwoo/source/study/grepp_BE2/MSA/.github/workflows/image-registry-cicd.yml)
 
-Git에 넣지 않는 것:
+이 workflow가 하는 일:
 
-- 실제 비밀키
-- kubeconfig 원본 파일
-- JWT 개인키
-- `.env`
+1. 코드 체크아웃
+2. JDK 17 설정
+3. `config`, `discovery`, `apigateway` 각각 `jar` 생성
+4. Docker 이미지 생성
+5. GHCR로 push
 
-## 6. GitHub Secrets에 넣을 값
+## 5. GitHub Secrets에 넣을 값
 
-보통 아래 값을 GitHub Secrets에 넣습니다.
+GHCR를 쓰면 별도 `REGISTRY_USERNAME`, `REGISTRY_PASSWORD` 없이도
+기본 `GITHUB_TOKEN`으로 push 할 수 있습니다.
 
-- `REGISTRY_USERNAME`
-- `REGISTRY_PASSWORD`
-- `KUBE_CONFIG`
-- `TOKEN_MAKER`
-- `TOKEN_PRIVATE`
-- `TOKEN_PUBLIC`
+즉 지금 workflow 기준으로 필수 시크릿은 없습니다.
 
-설명:
+대신 workflow 권한은 아래가 필요합니다.
 
-- `REGISTRY_*`
-  - Docker 이미지 push 용도
-- `KUBE_CONFIG`
-  - GitHub Actions에서 클러스터 접근할 때 사용
-- `TOKEN_*`
-  - `member-service` 시크릿 생성용
+- `contents: read`
+- `packages: write`
 
-## 7. 배포 순서
+## 6. 어떤 이미지가 올라가나
 
-배포 순서는 아래가 안전합니다.
+이미지 경로는 아래 형식입니다.
 
-1. `config-service`
-2. `discovery`
-3. `apigateway`
-4. `member-service`
+```text
+ghcr.io/<github-owner>/config:<commit-sha-7자리>
+ghcr.io/<github-owner>/discovery:<commit-sha-7자리>
+ghcr.io/<github-owner>/apigateway:<commit-sha-7자리>
+```
 
-이 순서를 쓰는 이유:
+예:
 
-- `member-service`는 `config-service`와 `discovery`를 먼저 사용함
-- 마지막에 `apigateway` 기준으로 Swagger 확인 가능
+```text
+ghcr.io/parkjinwoo/config:a1b2c3d
+```
 
-## 8. CI 단계에서 하는 일
+## 7. CI 단계에서 하는 일
 
-CI는 보통 여기까지입니다.
+CI는 여기까지입니다.
 
 1. 코드 체크아웃
 2. JDK 세팅
-3. 테스트 실행
-4. `jar` 빌드
-5. Docker 이미지 빌드
-6. 이미지 push
+3. `jar` 빌드
+4. Docker 이미지 빌드
+5. 이미지 push
 
-이 프로젝트 기준으로 보면:
+이 프로젝트 기준으로는 각 모듈의 아래 스크립트를 재사용합니다.
 
-- `config`, `discovery`, `apigateway`
-  - `bootJar`
-- `member-service`
-  - `bootBuildImage` 또는 Docker 이미지 빌드
+- `scripts/build_jar.sh`
+- `scripts/build_docker.sh`
 
-## 9. CD 단계에서 하는 일
+## 8. 나중에 서버가 생기면 추가할 것
 
-CD는 보통 여기입니다.
+서버가 생기면 그때 아래 단계만 뒤에 붙이면 됩니다.
 
-1. Kubernetes 접속
-2. 네임스페이스 확인
-3. ConfigMap/Secret 반영
-4. Deployment 이미지 교체
-5. 롤아웃 확인
+1. 서버 또는 Kubernetes 접속 정보 추가
+2. `docker pull` 또는 `kubectl set image`
+3. 롤아웃 확인
 
-지금 레포 기준으로 연결할 수 있는 파일:
+즉 지금은 CI만 만들고, CD는 나중에 붙이는 구조입니다.
 
-- [deploy-k8s.sh](/Users/parkjinwoo/source/study/grepp_BE2/MSA/scripts/deploy/deploy-k8s.sh)
-- [deploy.sh](/Users/parkjinwoo/source/study/grepp_BE2/member-service/scripts/deploy.sh)
+## 9. 추천 workflow 구조
 
-## 10. 추천 workflow 구조
-
-파일 위치 예시:
+파일 위치:
 
 ```text
-.github/workflows/deploy.yml
+MSA/.github/workflows/image-registry-cicd.yml
 ```
 
-단계 예시:
+단계:
 
-1. `main` 브랜치 push 감지
+1. `main` 또는 `master` 브랜치 push 감지
 2. Gradle 빌드
-3. Docker 로그인
+3. GHCR 로그인
 4. 이미지 build/push
-5. `kubectl apply`
-6. `kubectl rollout status`
 
-## 11. 배포 전에 확인할 것
+## 10. 실행 전에 확인할 것
 
-- Kubernetes 클러스터에서 이미지 저장소 접근 가능 여부
-- `msa` 네임스페이스 존재 여부
-- `member-service-secrets` 준비 여부
-- `config-repo` ConfigMap 반영 여부
+- 저장소 `Settings -> Actions -> General`에서 패키지 권한이 막혀 있지 않은지
+- GHCR 패키지 생성 권한이 있는지
+- 각 모듈의 Dockerfile이 정상인지
+- 각 모듈 `scripts/build_jar.sh`, `scripts/build_docker.sh`가 로컬에서 먼저 성공하는지
 
-## 12. 가장 많이 막히는 부분
+## 11. 가장 많이 막히는 부분
 
-### 1) 이미지 pull 실패
+### 1) 이미지 push 실패
 
 원인:
 
-- 이미지 push 안 됨
-- 태그 불일치
-- 레지스트리 로그인 문제
+- 패키지 권한 부족
+- GHCR 로그인 문제
+- owner 이름 대소문자 문제
 
-### 2) member-service만 기동 실패
-
-원인:
-
-- `TOKEN_*` 누락
-- Config Server 연결 실패
-- Eureka 등록 실패
-
-### 3) gateway는 뜨는데 실제 API 호출 실패
+### 2) 특정 모듈 빌드 실패
 
 원인:
 
-- 서비스가 Eureka에 등록 안 됨
-- 인가 체크 API가 `false` 반환
-- OpenAPI `servers.url`이 게이트웨이 기준이 아님
+- `jar` 빌드 실패
+- Dockerfile과 jar 파일 이름 불일치
+- Gradle wrapper 권한 문제
 
-## 13. 추천 시작 방식
+## 12. 추천 시작 방식
 
-처음 구성할 때는 아래처럼 나누는 것이 관리가 쉽습니다.
+처음 구성할 때는 아래 순서가 가장 안정적입니다.
 
-1. 먼저 수동 배포 성공
-2. 그 다음 GitHub Actions로 빌드 자동화
-3. 마지막에 Kubernetes 반영까지 자동화
+1. 먼저 로컬에서 이미지 생성 성공
+2. 그 다음 GitHub Actions로 이미지 push 자동화
+3. 마지막에 서버가 생기면 배포 단계 추가
 
-즉 처음부터 모든 것을 한 번에 자동화하기보다:
+즉:
 
 ```text
-수동 배포 성공 -> CI 자동화 -> CD 자동화
+로컬 이미지 생성 성공 -> GitHub CI 자동화 -> 서버 배포 추가
 ```
-
-이 순서가 가장 안정적입니다.
