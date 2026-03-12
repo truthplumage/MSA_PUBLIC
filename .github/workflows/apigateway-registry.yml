@@ -1,5 +1,5 @@
 # 이 workflow는 apigateway 전용이다.
-# main-apigateway 브랜치에 apigateway 관련 변경이 push 되면
+# main-gateway 브랜치에 apigateway 관련 변경이 push 되면
 # apigateway/Dockerfile 기준으로 이미지를 빌드하고 GHCR에만 올린다.
 # 별도 shell 스크립트는 호출하지 않는다.
 name: apigateway-registry
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main-apigateway
+      - main-gateway
     paths:
       - "apigateway/**"
       - ".github/workflows/apigateway-registry.yml"
