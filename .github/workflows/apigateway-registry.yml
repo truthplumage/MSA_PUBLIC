@@ -1,33 +1,64 @@
+# 이 workflow는 apigateway 전용이다.
+# main-apigateway 브랜치에 apigateway 관련 변경이 push 되면
+# apigateway/Dockerfile 기준으로 이미지를 빌드하고 GHCR에만 올린다.
+# 별도 shell 스크립트는 호출하지 않는다.
 name: apigateway-registry
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main-apigateway
     paths:
       - "apigateway/**"
+      - ".github/workflows/apigateway-registry.yml"
+
+concurrency:
+  group: apigateway-registry
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build:
-    name: "build apigateway"
+  build-and-push:
+    name: apigateway 이미지 빌드 및 푸시
     runs-on: ubuntu-latest
+
     steps:
-      - name: checkout
+      # 저장소 코드를 먼저 받아온다.
+      - name: 저장소 체크아웃
         uses: actions/checkout@v4
 
-      - name: Prepare image URI # 레지스트리 경로와 태그 조합
-        id: prepare-image
+      # GHCR는 owner를 소문자로 쓰는 것이 안전하다.
+      # SHA 7자리를 이미지 태그로 쓰면 어떤 커밋에서 나온 이미지인지 바로 확인할 수 있다.
+      - name: 이미지 태그 준비
+        shell: bash
         run: |
-          IMAGE_PATH="${REGISTRY}/$(echo "${IMAGE_NAME}" | tr '[:upper:]' '[:lower:]')"
-          echo "image=${IMAGE_PATH}:${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
-          echo "latest=${IMAGE_PATH}:latest" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_PATH=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/apigateway" >> "${GITHUB_ENV}"
+          echo "IMAGE_TAG=${GITHUB_SHA::7}" >> "${GITHUB_ENV}"
 
-      - name: Build and push image # Dockerfile 기반 이미지 빌드 및 푸시
+      # 저장소에 등록한 GHCR 시크릿으로 GHCR 로그인한다.
+      - name: GHCR 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Dockerfile 기반 이미지 빌드 및 푸시
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./apigateway
+          file: ./apigateway/Dockerfile
           push: true
           tags: |
-            ${{ steps.prepare-image.outputs.image }}
-            ${{ steps.prepare-image.outputs.latest }}
-          platforms: linux/amd64
+            ${{ env.IMAGE_PATH }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_PATH }}:latest
+
+      - name: 결과 출력
+        shell: bash
+        run: |
+          echo "완료 이미지: ${IMAGE_PATH}:${IMAGE_TAG}"
+          echo "완료 이미지: ${IMAGE_PATH}:latest"
