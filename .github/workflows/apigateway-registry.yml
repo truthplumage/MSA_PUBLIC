@@ -11,23 +11,23 @@ jobs:
   build:
     name: "build apigateway"
     runs-on: ubuntu-latest
-  steps:
-    - name: checkout
-      uses: actions/checkout@v4
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
 
-    - name: Prepare image URI # 레지스트리 경로와 태그 조합
-      id: prepare-image
-      run: |
-        IMAGE_PATH="${REGISTRY}/$(echo "${IMAGE_NAME}" | tr '[:upper:]' '[:lower:]')"
-        echo "image=${IMAGE_PATH}:${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
-        echo "latest=${IMAGE_PATH}:latest" >> "$GITHUB_OUTPUT"
+      - name: Prepare image URI # 레지스트리 경로와 태그 조합
+        id: prepare-image
+        run: |
+          IMAGE_PATH="${REGISTRY}/$(echo "${IMAGE_NAME}" | tr '[:upper:]' '[:lower:]')"
+          echo "image=${IMAGE_PATH}:${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "latest=${IMAGE_PATH}:latest" >> "$GITHUB_OUTPUT"
 
-    - name: Build and push image # Dockerfile 기반 이미지 빌드 및 푸시
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: |
-          ${{ steps.prepare-image.outputs.image }}
-          ${{ steps.prepare-image.outputs.latest }}
-        platforms: linux/amd64
+      - name: Build and push image # Dockerfile 기반 이미지 빌드 및 푸시
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.prepare-image.outputs.image }}
+            ${{ steps.prepare-image.outputs.latest }}
+          platforms: linux/amd64
