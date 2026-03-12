@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - main-apigateway
-  paths:
-    - "apigateway/**"
+    paths:
+      - "apigateway/**"
 
 jobs:
   build:
