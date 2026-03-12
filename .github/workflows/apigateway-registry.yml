@@ -12,7 +12,8 @@ jobs:
     name: "build apigateway"
     runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
+    - name: checkout
+      uses: actions/checkout@v4
 
     - name: Prepare image URI # 레지스트리 경로와 태그 조합
       id: prepare-image
